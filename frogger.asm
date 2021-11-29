@@ -35,7 +35,7 @@
 	safeZone: .word 0xFFD966
 	road: .word 0x404040
 	frogColor: .word 0xEF00EF
-	frogX: .byte 0
+	frogX: .byte 16
 	frogY: .byte 0
 
 .text
@@ -69,8 +69,6 @@
 	jal drawLine
 	
 	#sw $t1, 124($t0) # paint the first (top-right) unit red.
-	lb $a1, frogX
-	lb $a2, frogY 
 	jal drawFrog
 	
 
@@ -79,34 +77,55 @@ Exit:
 	syscall
 
 drawFrog: #Arguments: frogX, frogY
+	lb $a1, frogX
+	lb $a2, frogY 
 	li $t6, 0 #Current
-	mult $a1, $a2
+	#y = 128(8-fy)
+	li $t5, 28
+	sub $t5, $t5, $a2
+	li $t6, 128
+	mult $t5, $t6
 	mflo $t3
+	li $t5, 4
+	mult $a1, $t5
+	mflo $t5
+	add $t3, $t3, $t5
 	
 	addu $t6, $t3, $t0
 	sw $t1, ($t6)
 	addi $t3, $t3, 12
 	addu $t6, $t3, $t0
 	sw $t1, ($t6)
-	addi $t3, $t3, 128
+	addi $t3, $t3, 116
 	addu $t6, $t3, $t0
 	sw $t1, ($t6)
-	addi $t3, $t3, 132
+	addi $t3, $t3, 4
 	addu $t6, $t3, $t0
 	sw $t1, ($t6)
-	addi $t3, $t3, 136
+	addi $t3, $t3, 4
 	addu $t6, $t3, $t0
 	sw $t1, ($t6)
-	#sw $t1, 128($t0)
-	#sw $t1, 132($t0)
-	#sw $t1, 136($t0)
-	#sw $t1, 140($t0)
-	#sw $t1, 260($t0)
-	#sw $t1, 264($t0)
-	#sw $t1, 384($t0)
-	#sw $t1, 388($t0)
-	#sw $t1, 392($t0)
-	#sw $t1, 396($t0)
+	addi $t3, $t3, 4
+	addu $t6, $t3, $t0
+	sw $t1, ($t6)
+	addi $t3, $t3, 120
+	addu $t6, $t3, $t0
+	sw $t1, ($t6)
+	addi $t3, $t3, 4
+	addu $t6, $t3, $t0
+	sw $t1, ($t6)
+	addi $t3, $t3, 120
+	addu $t6, $t3, $t0
+	sw $t1, ($t6)
+	addi $t3, $t3, 4
+	addu $t6, $t3, $t0
+	sw $t1, ($t6)
+	addi $t3, $t3, 4
+	addu $t6, $t3, $t0
+	sw $t1, ($t6)
+	addi $t3, $t3, 4
+	addu $t6, $t3, $t0
+	sw $t1, ($t6)
 	jr $ra
 
 drawLine: # Arguments: Start, End, Color
@@ -120,5 +139,5 @@ drawLine: # Arguments: Start, End, Color
 		addi $a1, $a1, 4 # add 4 to a1
 		j loopDL # jump back to the top
 	end:
-	jr $ra
+		jr $ra
 
