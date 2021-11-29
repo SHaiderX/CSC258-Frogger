@@ -30,46 +30,67 @@
 
 .data
 	displayAddress: .word 0x10008000
+	grass: .word 0x00FF00
+	ocean: .word 0x6060FF
+	safeZone: .word 0xFFD966
+	road: .word 0x404040
+	frogColor: .word 0xEF00EF
+	frogX: .byte 0
+	frogY: .byte 0
+
 .text
 	lw $t0, displayAddress # $t0 stores the base address for display
-	li $t1, 0xff0000 # $t1 stores the red colour code
-	li $t2, 0x00ff00 # $t2 stores the green colour code
-	li $t3, 0x0000ff # $t3 stores the blue colour code
+	lw $t1, frogColor
 	
 	#EndZone
 	li $a1, 0 #Start Value
 	li $a2, 1024 #End Value
-	li $a3, 0x00FF00  #Color
+	lw $a3,  grass #Color
 	jal drawLine
 	#Ocean
 	li $a1, 1024
 	li $a2, 2048
-	li $a3, 0x6060FF
+	lw $a3, ocean
 	jal drawLine
 	#Safe Zone
 	li $a1, 2048
 	li $a2, 2560
-	li $a3, 0xFFD966
+	lw $a3, safeZone
 	jal drawLine
 	#Road
 	li $a1, 2560
 	li $a2, 3584
-	li $a3, 0x404040
+	lw $a3, road
 	jal drawLine
 	#Start Zone
 	li $a1, 3584
 	li $a2, 4096
-	li $a3, 0x00FF00
+	lw $a3,  grass
 	jal drawLine
 	
-	#sw color, offset(origin)
-	#sw $t1, 0($t0) # paint the first (top-left) unit red.
 	#sw $t1, 124($t0) # paint the first (top-right) unit red.
-	#sw $t2, 4($t0) # paint the second unit on the first row green. Why $t0+4?
-	#sw $t3, 128($t0) # paint the first unit on the second row blue. Why +128?
+	
+	
+
 Exit:
 	li $v0, 10 # terminate the program gracefully
 	syscall
+
+drawFrog: #Arguments: frogX, frogY
+	
+	sw $t1, 0($t0)
+	sw $t1, 12($t0)
+	sw $t1, 128($t0)
+	sw $t1, 132($t0)
+	sw $t1, 136($t0)
+	sw $t1, 140($t0)
+	sw $t1, 260($t0)
+	sw $t1, 264($t0)
+	sw $t1, 384($t0)
+	sw $t1, 388($t0)
+	sw $t1, 392($t0)
+	sw $t1, 396($t0)
+	jr $ra
 
 drawLine: # Arguments: Start, End, Color
 	li $t6, 0 #Current
