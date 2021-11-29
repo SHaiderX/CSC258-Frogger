@@ -69,7 +69,9 @@
 	jal drawLine
 	
 	#sw $t1, 124($t0) # paint the first (top-right) unit red.
-	
+	lb $a1, frogX
+	lb $a2, frogY 
+	jal drawFrog
 	
 
 Exit:
@@ -77,19 +79,34 @@ Exit:
 	syscall
 
 drawFrog: #Arguments: frogX, frogY
+	li $t6, 0 #Current
+	mult $a1, $a2
+	mflo $t3
 	
-	sw $t1, 0($t0)
-	sw $t1, 12($t0)
-	sw $t1, 128($t0)
-	sw $t1, 132($t0)
-	sw $t1, 136($t0)
-	sw $t1, 140($t0)
-	sw $t1, 260($t0)
-	sw $t1, 264($t0)
-	sw $t1, 384($t0)
-	sw $t1, 388($t0)
-	sw $t1, 392($t0)
-	sw $t1, 396($t0)
+	addu $t6, $t3, $t0
+	sw $t1, ($t6)
+	addi $t3, $t3, 12
+	addu $t6, $t3, $t0
+	sw $t1, ($t6)
+	addi $t3, $t3, 128
+	addu $t6, $t3, $t0
+	sw $t1, ($t6)
+	addi $t3, $t3, 132
+	addu $t6, $t3, $t0
+	sw $t1, ($t6)
+	addi $t3, $t3, 136
+	addu $t6, $t3, $t0
+	sw $t1, ($t6)
+	#sw $t1, 128($t0)
+	#sw $t1, 132($t0)
+	#sw $t1, 136($t0)
+	#sw $t1, 140($t0)
+	#sw $t1, 260($t0)
+	#sw $t1, 264($t0)
+	#sw $t1, 384($t0)
+	#sw $t1, 388($t0)
+	#sw $t1, 392($t0)
+	#sw $t1, 396($t0)
 	jr $ra
 
 drawLine: # Arguments: Start, End, Color
