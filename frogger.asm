@@ -44,17 +44,31 @@
 .text
 main:
 	lw $t0, displayAddress # $t0 stores the base address for display
-	lw $t1, frogColor
+
+
 	
-	lw $a3,  red #Color
 	li $a1, 2560
 	li $a2, 3072
-	li $t6, 0
-LoopRD:
-	beq $a1, $a2, endRD
+	lw $a3,  red #Color
 	
-	sw $a3, vehicleSpace($t9)
-endRD:
+	
+	li $t6, 0 #Current
+	loopDLX:
+		bge $a1, $a2, endX # if whole row itterated through, finish
+		li $t7, 0
+		li $t5, 8
+		inLoopR:
+			add $t6, $a1, $t0
+			beq $t7, $t5, endR #when 8 loops
+			sw $a3, ($t6)
+			addi $a1, $a1, 4 # add 4 to a1
+			addi $t7, $t7, 1
+			j inLoopR
+		endR:
+		addi $a1, $a1, 32 # skip 8 empty pixels
+		j loopDLX # jump back to the top
+	endX:
+	
 	
 	
 	#UI
@@ -78,29 +92,34 @@ endRD:
 	lw $a3, safeZone
 	jal drawLine
 	#Road
-	#li $a1, 2560
-	#li $a2, 3584
-	#lw $a3, road
-	#jal drawLine
+	li $a1, 2560
+	li $a2, 3584
+	lw $a3, road
+	jal drawLine
 	#Start Zone
 	li $a1, 3584
 	li $a2, 4096
 	lw $a3,  grass
 	jal drawLine
-	
+
 	#sw $t1, 124($t0) # paint the first (top-right) unit red.
 	jal drawFrog
 	
+li $v0, 32
+li $a0, 16
+syscall
+j main
 
 Exit:
 	li $v0, 10 # terminate the program gracefully
-	syscall
+syscall
 
 drawFrog: #Arguments: frogX, frogY
+	lw $t1, frogColor
+
 	lb $a1, frogX
 	lb $a2, frogY 
 	li $t6, 0 #Current
-	#y = 128(8-fy)
 	li $t5, 28
 	sub $t5, $t5, $a2
 	li $t6, 128
@@ -148,12 +167,14 @@ drawFrog: #Arguments: frogX, frogY
 	sw $t1, ($t6)
 	jr $ra
 
+
+
 drawLine: # Arguments: Start, End, Color
 	li $t6, 0 #Current
 	loopDL:
 		beq $a1, $a2, end # if whole row itterated through, finish
 	
-		addu $t6, $a1, $t0
+		add $t6, $a1, $t0
 		sw $a3, ($t6)
 	
 		addi $a1, $a1, 4 # add 4 to a1
