@@ -45,31 +45,19 @@
 main:
 	lw $t0, displayAddress # $t0 stores the base address for display
 
-
 	
+	
+	#Adds pixels to array
+	la $a1, vehicleSpace      #$t8 holds address of vehicleSpace array
+	lw $a2,  red #Color
+	jal storeArray
+	
+	#Paint Array
 	li $a1, 2560
 	li $a2, 3072
-	lw $a3,  red #Color
-	
-	
-	li $t6, 0 #Current
-	loopDLX:
-		bge $a1, $a2, endX # if whole row itterated through, finish
-		li $t7, 0
-		li $t5, 8
-		inLoopR:
-			add $t6, $a1, $t0
-			beq $t7, $t5, endR #when 8 loops
-			sw $a3, ($t6)
-			addi $a1, $a1, 4 # add 4 to a1
-			addi $t7, $t7, 1
-			j inLoopR
-		endR:
-		addi $a1, $a1, 32 # skip 8 empty pixels
-		j loopDLX # jump back to the top
-	endX:
-	
-	
+	la $a3, vehicleSpace
+	jal drawRow
+
 	
 	#UI
 	li $a1, 0 #Start Value
@@ -92,23 +80,22 @@ main:
 	lw $a3, safeZone
 	jal drawLine
 	#Road
-	li $a1, 2560
-	li $a2, 3584
-	lw $a3, road
-	jal drawLine
+	#li $a1, 2560
+	#li $a2, 3584
+	#lw $a3, road
+	#jal drawLine
 	#Start Zone
 	li $a1, 3584
 	li $a2, 4096
 	lw $a3,  grass
 	jal drawLine
 
-	#sw $t1, 124($t0) # paint the first (top-right) unit red.
 	jal drawFrog
 	
-li $v0, 32
-li $a0, 16
-syscall
-j main
+#li $v0, 32
+#li $a0, 16
+#syscall
+#j main
 
 Exit:
 	li $v0, 10 # terminate the program gracefully
@@ -182,3 +169,40 @@ drawLine: # Arguments: Start, End, Color
 	end:
 		jr $ra
 
+storeArray:
+	li $t1, 512
+    	add $t2, $zero, $zero    #$t2 holds i=0
+	li $t6, 0 #Current
+	loopSA:
+		bge $t2, $t1, endSA # if whole row itterated through, finish
+		li $t7, 0
+		li $t5, 8
+		inLoopSA:
+			beq $t7, $t5, inendSA #when 8 loops
+			add $t6, $a1, $t2  #$t6 = A[i]
+			sw $a2, 0($t6) #A[i] = color
+			addi $t2, $t2, 4 # add 4 to t2
+			addi $t7, $t7, 1
+			j inLoopSA
+		inendSA:
+		addi $t2, $t2, 32 # skip 8 empty pixels
+		j loopSA # jump back to the top
+	endSA:
+		jr $ra
+
+drawRow: # Arguments: Start, End, Color
+	li $t6, 0 #Current
+	li $t7, 0 #index i for array
+	loopDR:
+		beq $a1, $a2, endDR # if whole row itterated through, finish
+		add $t3, $a3, $t7  #$a3 = A[i]
+		add $t6, $a1, $t0  #$t6 = current pixel
+		
+		sw $t3, 0($t6)
+	
+		addi $t7, $t7, 4
+		addi $a1, $a1, 4 # add 4 to a1
+		j loopDR # jump back to the top
+	endDR:
+		jr $ra
+	#sw $t1, 124($t0) # paint the first (top-right) unit red.
