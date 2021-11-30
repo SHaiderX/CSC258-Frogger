@@ -30,20 +30,40 @@
 
 .data
 	displayAddress: .word 0x10008000
+	vehicleSpace: .space 512
 	grass: .word 0x00FF00
 	ocean: .word 0x6060FF
 	safeZone: .word 0xFFD966
 	road: .word 0x404040
-	frogColor: .word 0xEF00EF
+	black: .word 0x000000
+	red: .word 0xFF1010
+	frogColor: .word 0x4CA620
 	frogX: .byte 16
 	frogY: .byte 0
 
 .text
+main:
 	lw $t0, displayAddress # $t0 stores the base address for display
 	lw $t1, frogColor
 	
-	#EndZone
+	lw $a3,  red #Color
+	li $a1, 2560
+	li $a2, 3072
+	li $t6, 0
+LoopRD:
+	beq $a1, $a2, endRD
+	
+	sw $a3, vehicleSpace($t9)
+endRD:
+	
+	
+	#UI
 	li $a1, 0 #Start Value
+	li $a2, 512 #End Value
+	lw $a3,  black #Color
+	jal drawLine
+	#EndZone
+	li $a1, 512 #Start Value
 	li $a2, 1024 #End Value
 	lw $a3,  grass #Color
 	jal drawLine
@@ -58,10 +78,10 @@
 	lw $a3, safeZone
 	jal drawLine
 	#Road
-	li $a1, 2560
-	li $a2, 3584
-	lw $a3, road
-	jal drawLine
+	#li $a1, 2560
+	#li $a2, 3584
+	#lw $a3, road
+	#jal drawLine
 	#Start Zone
 	li $a1, 3584
 	li $a2, 4096
@@ -134,7 +154,7 @@ drawLine: # Arguments: Start, End, Color
 		beq $a1, $a2, end # if whole row itterated through, finish
 	
 		addu $t6, $a1, $t0
-		sw $a3, ($t6) # paint the first row red
+		sw $a3, ($t6)
 	
 		addi $a1, $a1, 4 # add 4 to a1
 		j loopDL # jump back to the top
