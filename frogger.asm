@@ -44,20 +44,21 @@
 .text
 main:
 	lw $t0, displayAddress # $t0 stores the base address for display
+	
+	#check for keypress
+	lw $t8, 0xffff0000
+	beq $t8, 1, keyboard_input
 
-	
-	
 	#Adds pixels to array
-	la $a1, vehicleSpace      #$t8 holds address of vehicleSpace array
+	la $a1, vehicleSpace     
 	lw $a2,  red #Color
 	jal storeArray
 	
 	#Paint Array
-	li $a1, 2560
-	li $a2, 3072
-	la $a3, vehicleSpace
-	jal drawRow
-
+	#li $a1, 2560
+	#li $a2, 3072
+	#la $a3, vehicleSpace
+	#jal drawRow
 	
 	#UI
 	li $a1, 0 #Start Value
@@ -80,10 +81,10 @@ main:
 	lw $a3, safeZone
 	jal drawLine
 	#Road
-	#li $a1, 2560
-	#li $a2, 3584
-	#lw $a3, road
-	#jal drawLine
+	li $a1, 2560
+	li $a2, 3584
+	lw $a3, road
+	jal drawLine
 	#Start Zone
 	li $a1, 3584
 	li $a2, 4096
@@ -92,10 +93,22 @@ main:
 
 	jal drawFrog
 	
-#li $v0, 32
-#li $a0, 16
-#syscall
-#j main
+	#Static Cars
+	li $a1, 2560
+	li $a2, 3584
+	lw $a3,  red #Color
+	jal drawStaticRow
+	
+	#Static Logs
+	li $a1, 1024
+	li $a2, 2048
+	li $a3, 0x732F00 #Color
+	jal drawStaticRow
+	
+li $v0, 32
+li $a0, 16
+syscall
+j main
 
 Exit:
 	li $v0, 10 # terminate the program gracefully
@@ -103,7 +116,6 @@ syscall
 
 drawFrog: #Arguments: frogX, frogY
 	lw $t1, frogColor
-
 	lb $a1, frogX
 	lb $a2, frogY 
 	li $t6, 0 #Current
@@ -116,7 +128,6 @@ drawFrog: #Arguments: frogX, frogY
 	mult $a1, $t5
 	mflo $t5
 	add $t3, $t3, $t5
-	
 	addu $t6, $t3, $t0
 	sw $t1, ($t6)
 	addi $t3, $t3, 12
@@ -190,6 +201,25 @@ storeArray:
 	endSA:
 		jr $ra
 
+drawStaticRow:
+		li $t6, 0 #Current
+	loopDLX:
+		bge $a1, $a2, endX # if whole row itterated through, finish
+		li $t7, 0
+		li $t5, 8
+		inLoopR:
+			add $t6, $a1, $t0
+			beq $t7, $t5, endR #when 8 loops
+			sw $a3, ($t6)
+			addi $a1, $a1, 4 # add 4 to a1
+			addi $t7, $t7, 1
+			j inLoopR
+		endR:
+		addi $a1, $a1, 32 # skip 8 empty pixels
+		j loopDLX # jump back to the top
+	endX:
+		jr $ra
+
 drawRow: # Arguments: Start, End, Color
 	li $t6, 0 #Current
 	li $t7, 0 #index i for array
@@ -206,3 +236,55 @@ drawRow: # Arguments: Start, End, Color
 	endDR:
 		jr $ra
 	#sw $t1, 124($t0) # paint the first (top-right) unit red.
+	
+keyboard_input:
+   	la $a0, frogX
+   	la $a1, frogY
+   	
+	lw $t2, 0xffff0004
+	beq $t2, 0x77, respond_to_W
+	beq $t2, 0x61, respond_to_A
+	beq $t2, 0x73, respond_to_S
+	beq $t2, 0x64, respond_to_D
+	j key_exit
+	
+	respond_to_W:
+		lb $t3, ($a1) #get value
+  		addi $a2, $t3, 4 #add 4 to y value
+  		sb $a2, 0($a1) #save new value
+		j key_exit
+		
+	respond_to_A:
+		lb $t3, ($a0) #get value
+  		subi $a2, $t3, 4 #add 4 to y value
+  		sb $a2, 0($a0) #save new value
+		j key_exit
+		
+	respond_to_S:
+		lb $t3, ($a1) #get value
+  		subi $a2, $t3, 4 #add 4 to y value
+  		sb $a2, 0($a1) #save new value
+		j key_exit
+		
+	respond_to_D:
+		lb $t3, ($a0) #get value
+  		addi $a2, $t3, 4 #add 4 to y value
+  		sb $a2, 0($a0) #save new value
+		j key_exit
+	
+	key_exit:
+		jr $ra
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
