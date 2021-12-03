@@ -13,15 +13,9 @@
 # - Base Address for Display: 0x10008000 ($gp)
 #
 # Which milestone is reached in this submission?
-# (See the assignment handout for descriptions of the milestones)
-# - Milestone 1/2/3/4/5 (choose the one the applies)
+# - Milestone 1/2
 #
 # Which approved additional features have been implemented?
-# (See the assignment handout for the list of additional features)
-# 1. (fill in the feature, if any)
-# 2. (fill in the feature, if any)
-# 3. (fill in the feature, if any)
-# ... (add more if necessary)
 #
 # Any additional information that the TA needs to know:
 # - (write here, if any)
@@ -30,13 +24,17 @@
 
 .data
 	displayAddress: .word 0x10008000
-	vehicleSpace: .space 512
+	carRow1: .word 0,4
+	carRow2: .word 1,5
+	logRow1: .word 0,4
+	logRow2: .word 1,5
 	grass: .word 0x00FF00
 	ocean: .word 0x6060FF
 	safeZone: .word 0xFFD966
 	road: .word 0x404040
 	black: .word 0x000000
 	red: .word 0xFF1010
+	log: .word 0x732F00
 	frogColor: .word 0x4CA620
 	frogX: .byte 16
 	frogY: .byte 0
@@ -48,17 +46,6 @@ main:
 	#check for keypress
 	lw $t8, 0xffff0000
 	beq $t8, 1, keyboard_input
-
-	#Adds pixels to array
-	la $a1, vehicleSpace     
-	lw $a2,  red #Color
-	jal storeArray
-	
-	#Paint Array
-	#li $a1, 2560
-	#li $a2, 3072
-	#la $a3, vehicleSpace
-	#jal drawRow
 	
 	#UI
 	li $a1, 0 #Start Value
@@ -93,22 +80,30 @@ main:
 
 	jal drawFrog
 	
-	#Static Cars
-	li $a1, 2560
-	li $a2, 3584
-	lw $a3,  red #Color
-	jal drawStaticRow
+	la $a0, carRow1
+	li $a1, 5 # y cord
+	lw $a2, red
+	jal drawRow
+
+	la $a0, carRow2
+	li $a1, 6 # y cord
+	lw $a2, red
+	jal drawRow
+
+	la $a0, logRow1
+	li $a1, 2 # y cord
+	lw $a2, log
+	jal drawRow
+
+	la $a0, logRow2
+	li $a1, 3 # y cord
+	lw $a2, log
+	jal drawRow
 	
-	#Static Logs
-	li $a1, 1024
-	li $a2, 2048
-	li $a3, 0x732F00 #Color
-	jal drawStaticRow
-	
-li $v0, 32
-li $a0, 16
-syscall
-j main
+	#li $v0, 32
+	#li $a0, 16
+	#syscall
+	#j main
 
 Exit:
 	li $v0, 10 # terminate the program gracefully
@@ -166,7 +161,6 @@ drawFrog: #Arguments: frogX, frogY
 	jr $ra
 
 
-
 drawLine: # Arguments: Start, End, Color
 	li $t6, 0 #Current
 	loopDL:
@@ -179,65 +173,114 @@ drawLine: # Arguments: Start, End, Color
 		j loopDL # jump back to the top
 	end:
 		jr $ra
-
-storeArray:
-	li $t1, 512
-    	add $t2, $zero, $zero    #$t2 holds i=0
-	li $t6, 0 #Current
-	loopSA:
-		bge $t2, $t1, endSA # if whole row itterated through, finish
-		li $t7, 0
-		li $t5, 8
-		inLoopSA:
-			beq $t7, $t5, inendSA #when 8 loops
-			add $t6, $a1, $t2  #$t6 = A[i]
-			sw $a2, 0($t6) #A[i] = color
-			addi $t2, $t2, 4 # add 4 to t2
-			addi $t7, $t7, 1
-			j inLoopSA
-		inendSA:
-		addi $t2, $t2, 32 # skip 8 empty pixels
-		j loopSA # jump back to the top
-	endSA:
-		jr $ra
-
-drawStaticRow:
-		li $t6, 0 #Current
-	loopDLX:
-		bge $a1, $a2, endX # if whole row itterated through, finish
-		li $t7, 0
-		li $t5, 8
-		inLoopR:
-			add $t6, $a1, $t0
-			beq $t7, $t5, endR #when 8 loops
-			sw $a3, ($t6)
-			addi $a1, $a1, 4 # add 4 to a1
-			addi $t7, $t7, 1
-			j inLoopR
-		endR:
-		addi $a1, $a1, 32 # skip 8 empty pixels
-		j loopDLX # jump back to the top
-	endX:
-		jr $ra
-
-drawRow: # Arguments: Start, End, Color
-	li $t6, 0 #Current
-	li $t7, 0 #index i for array
-	loopDR:
-		beq $a1, $a2, endDR # if whole row itterated through, finish
-		add $t3, $a3, $t7  #$a3 = A[i]
-		add $t6, $a1, $t0  #$t6 = current pixel
-		
-		sw $t3, 0($t6)
 	
-		addi $t7, $t7, 4
-		addi $a1, $a1, 4 # add 4 to a1
-		j loopDR # jump back to the top
+drawRect:  #a0	 = 0, 1, 4, 5.    #a1 = 5     #a2 = color
+	li $t7, 0
+	sll $t1, $a0, 4 #x coordinate
+	sll $t2, $a1, 2, #pixel row
+	sll $t2, $t2, 7
+	add $t7, $t1, $t2 # top left
+	add $t7, $t7, $t0
+	
+	sw $a2, 0($t7)
+	sw $a2, 4($t7)
+	sw $a2, 8($t7)
+	sw $a2, 12($t7)
+	sw $a2, 16($t7)
+	sw $a2, 20($t7)
+	sw $a2, 24($t7)
+	sw $a2, 28($t7)
+	
+	sw $a2, 128($t7)
+	sw $a2,132($t7)
+	sw $a2, 136($t7)
+	sw $a2, 140($t7)
+	sw $a2, 144($t7)
+	sw $a2, 148($t7)
+	sw $a2, 152($t7)
+	sw $a2, 156($t7)
+	
+	sw $a2, 256($t7)
+	sw $a2, 260($t7)
+	sw $a2, 264($t7)
+	sw $a2, 268($t7)
+	sw $a2, 272($t7)
+	sw $a2, 276($t7)
+	sw $a2, 280($t7)
+	sw $a2, 284($t7)
+	
+	sw $a2, 384($t7)
+	sw $a2, 388($t7)
+	sw $a2, 392($t7)
+	sw $a2, 396($t7)
+	sw $a2, 400($t7)
+	sw $a2, 404($t7)
+	sw $a2, 408($t7)
+	sw $a2, 412($t7)
+	jr $ra
+	
+drawRow: # a0: array, a1: y axis, a2: color
+	li $t6, 0
+	LoopDR:
+		beq $t6, 8, endDR
+		
+		li $t3, 0
+		add $t3, $t6, $a0 # t3 = A[i]
+		lw $t4, ($t3) # t4 = value of A[i]
+	
+		li $t8, 0
+		add $t8, $t8, $t4 # x coordinate
+		
+		
+		li $t7, 0
+		sll $t1, $t8, 4 #x coordinate
+		sll $t5, $a1, 2, #pixel row
+		sll $t5, $t5, 7
+		add $t7, $t1, $t5 # top left
+		add $t7, $t7, $t0
+		
+		sw $a2, 0($t7)
+		sw $a2, 4($t7)
+		sw $a2, 8($t7)
+		sw $a2, 12($t7)
+		sw $a2, 16($t7)
+		sw $a2, 20($t7)
+		sw $a2, 24($t7)
+		sw $a2, 28($t7)
+		
+		sw $a2, 128($t7)
+		sw $a2,132($t7)
+		sw $a2, 136($t7)
+		sw $a2, 140($t7)
+		sw $a2, 144($t7)
+		sw $a2, 148($t7)
+		sw $a2, 152($t7)
+		sw $a2, 156($t7)
+		
+		sw $a2, 256($t7)
+		sw $a2, 260($t7)
+		sw $a2, 264($t7)
+		sw $a2, 268($t7)
+		sw $a2, 272($t7)
+		sw $a2, 276($t7)
+		sw $a2, 280($t7)
+		sw $a2, 284($t7)
+		
+		sw $a2, 384($t7)
+		sw $a2, 388($t7)
+		sw $a2, 392($t7)
+		sw $a2, 396($t7)
+		sw $a2, 400($t7)
+		sw $a2, 404($t7)
+		sw $a2, 408($t7)
+		sw $a2, 412($t7)
+	
+		add $t6, $t6, 4
+		j LoopDR
 	endDR:
 		jr $ra
-	#sw $t1, 124($t0) # paint the first (top-right) unit red.
 	
-keyboard_input:
+keyboard_input: 
    	la $a0, frogX
    	la $a1, frogY
    	
@@ -274,17 +317,3 @@ keyboard_input:
 	
 	key_exit:
 		jr $ra
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
