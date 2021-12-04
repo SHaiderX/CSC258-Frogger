@@ -80,30 +80,42 @@ main:
 
 	jal drawFrog
 	
-	la $a0, carRow1
-	li $a1, 5 # y cord
-	lw $a2, red
-	jal drawRow
-
-	la $a0, carRow2
-	li $a1, 6 # y cord
-	lw $a2, red
-	jal drawRow
-
 	la $a0, logRow1
 	li $a1, 2 # y cord
 	lw $a2, log
+	li $s1, 1024 #Starting row
 	jal drawRow
 
 	la $a0, logRow2
 	li $a1, 3 # y cord
 	lw $a2, log
+	li $s1, 1536 #Starting row
 	jal drawRow
+
+	la $a0, carRow1
+	li $a1, 5 # y cord
+	lw $a2, red
+	li $s1, 2560 #Starting row
+	jal drawRow
+
+	la $a0, carRow2
+	li $a1, 6 # y cord
+	lw $a2, red
+	li $s1, 3072 #Starting row
+	jal drawRow
+
+	li $a0, 2
+	la $a1, carRow1
+	jal ArrayForward
+
+	li $a0, 2
+	la $a1, carRow2
+	jal ArrayForward
 	
-	#li $v0, 32
-	#li $a0, 16
-	#syscall
-	#j main
+	li $v0, 32
+	li $a0, 1000
+	syscall
+	j main
 
 Exit:
 	li $v0, 10 # terminate the program gracefully
@@ -174,50 +186,6 @@ drawLine: # Arguments: Start, End, Color
 	end:
 		jr $ra
 	
-drawRect:  #a0	 = 0, 1, 4, 5.    #a1 = 5     #a2 = color
-	li $t7, 0
-	sll $t1, $a0, 4 #x coordinate
-	sll $t2, $a1, 2, #pixel row
-	sll $t2, $t2, 7
-	add $t7, $t1, $t2 # top left
-	add $t7, $t7, $t0
-	
-	sw $a2, 0($t7)
-	sw $a2, 4($t7)
-	sw $a2, 8($t7)
-	sw $a2, 12($t7)
-	sw $a2, 16($t7)
-	sw $a2, 20($t7)
-	sw $a2, 24($t7)
-	sw $a2, 28($t7)
-	
-	sw $a2, 128($t7)
-	sw $a2,132($t7)
-	sw $a2, 136($t7)
-	sw $a2, 140($t7)
-	sw $a2, 144($t7)
-	sw $a2, 148($t7)
-	sw $a2, 152($t7)
-	sw $a2, 156($t7)
-	
-	sw $a2, 256($t7)
-	sw $a2, 260($t7)
-	sw $a2, 264($t7)
-	sw $a2, 268($t7)
-	sw $a2, 272($t7)
-	sw $a2, 276($t7)
-	sw $a2, 280($t7)
-	sw $a2, 284($t7)
-	
-	sw $a2, 384($t7)
-	sw $a2, 388($t7)
-	sw $a2, 392($t7)
-	sw $a2, 396($t7)
-	sw $a2, 400($t7)
-	sw $a2, 404($t7)
-	sw $a2, 408($t7)
-	sw $a2, 412($t7)
-	jr $ra
 	
 drawRow: # a0: array, a1: y axis, a2: color
 	li $t6, 0
@@ -231,50 +199,56 @@ drawRow: # a0: array, a1: y axis, a2: color
 		li $t8, 0
 		add $t8, $t8, $t4 # x coordinate
 		
-		
+		#Drawing:
 		li $t7, 0
 		sll $t1, $t8, 4 #x coordinate
 		sll $t5, $a1, 2, #pixel row
 		sll $t5, $t5, 7
 		add $t7, $t1, $t5 # top left
+		#addi $t7, $t7, 20  # MOVING
+		#add $s0, $t7, $zero
 		add $t7, $t7, $t0
 		
-		sw $a2, 0($t7)
-		sw $a2, 4($t7)
-		sw $a2, 8($t7)
-		sw $a2, 12($t7)
-		sw $a2, 16($t7)
-		sw $a2, 20($t7)
-		sw $a2, 24($t7)
+		sw $a2, 0($t7) #1
+		sw $a2, 128($t7) #1
+		sw $a2, 256($t7) #1
+		sw $a2, 384($t7) #1
+
+		sw $a2, 4($t7) #2
+		sw $a2, 132($t7) #2
+		sw $a2, 260($t7) #2
+		sw $a2, 388($t7) #2
+
+		sw $a2, 8($t7) #3
+		sw $a2, 136($t7) #3
+		sw $a2, 264($t7) #3
+		sw $a2, 392($t7) #3
+
+		sw $a2, 12($t7) #4
+		sw $a2, 140($t7) #4
+		sw $a2, 268($t7) #4
+		sw $a2, 396($t7) #4
+		
+		sw $a2, 16($t7) #5
+		sw $a2, 144($t7) #5
+		sw $a2, 272($t7) #5
+		sw $a2, 400($t7) #5
+
+		sw $a2, 20($t7) #6
+		sw $a2, 148($t7) #6
+		sw $a2, 276($t7) #6
+		sw $a2, 404($t7) #6
+
+		sw $a2, 24($t7) #7
+		sw $a2, 152($t7) #7
+		sw $a2, 280($t7) #7
+		sw $a2, 408($t7) #7
+
 		sw $a2, 28($t7)
-		
-		sw $a2, 128($t7)
-		sw $a2,132($t7)
-		sw $a2, 136($t7)
-		sw $a2, 140($t7)
-		sw $a2, 144($t7)
-		sw $a2, 148($t7)
-		sw $a2, 152($t7)
 		sw $a2, 156($t7)
-		
-		sw $a2, 256($t7)
-		sw $a2, 260($t7)
-		sw $a2, 264($t7)
-		sw $a2, 268($t7)
-		sw $a2, 272($t7)
-		sw $a2, 276($t7)
-		sw $a2, 280($t7)
-		sw $a2, 284($t7)
-		
-		sw $a2, 384($t7)
-		sw $a2, 388($t7)
-		sw $a2, 392($t7)
-		sw $a2, 396($t7)
-		sw $a2, 400($t7)
-		sw $a2, 404($t7)
-		sw $a2, 408($t7)
+		sw $a2, 284($t7)		
 		sw $a2, 412($t7)
-	
+
 		add $t6, $t6, 4
 		j LoopDR
 	endDR:
@@ -317,3 +291,18 @@ keyboard_input:
 	
 	key_exit:
 		jr $ra
+
+ArrayForward: #a0: length of array , a1: array [1] address
+	lw $s0, 0($a1) 
+	addi $s0, $s0, 1
+	li $t2, 8
+	bge $s0, $t2, XValueExceeded 
+	blt $s0, $t2, XValueAdequate 
+XValueExceeded:
+	li $s0, 0
+XValueAdequate:
+	sw $s0, 0($a1) # save value
+	addi $a0, $a0, -1
+	addi $a1, $a1, 4
+	bnez $a0, ArrayForward
+	jr $ra
