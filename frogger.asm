@@ -38,8 +38,10 @@
 	frogColor: .word 0x4CA620
 	frogX: .byte 16
 	frogY: .byte 0
+	lives: .byte 3
 
 .text
+li $s6, 0
 main:
 	lw $t0, displayAddress # $t0 stores the base address for display
 	
@@ -104,6 +106,9 @@ main:
 	li $s1, 3072 #Starting row
 	jal drawRow
 
+	bne $s6, 50, SkipMoveArray #if not 60, skip
+	
+	li $s6, 0
 	la $a0, carRow1
 	jal MoveRow
 	la $a0, carRow2
@@ -114,8 +119,32 @@ main:
 	la $a0, logRow2
 	jal MoveRow
 
+	SkipMoveArray:
+
+	#collision detection - cars
+	lw $t1, 0($s4) #color of frog's top left into t1
+	lw $t2, red
+	bne $t1, $t2, notHit
+
+	lb $t3, lives
+	subi $t3, $t3, 1
+	sb $t3, lives
+
+	lb $t4, frogX
+	addi $t4, $zero, 16
+	sb $t4, frogX
+
+	lb $t5, frogY
+	addi $t5, $zero, 0
+	sb $t5, frogY
+
+	beq $t3, 0, Exit
+	notHit:
+
+	addi $s6, $s6, 1 #increment movement counter
+
 	li $v0, 32
-	li $a0, 1000
+	li $a0, 16
 	syscall
 	j main
 
@@ -123,7 +152,7 @@ Exit:
 	li $v0, 10 # terminate the program gracefully
 syscall
 
-drawFrog: #Arguments: frogX, frogY
+drawFrog:
 	lw $t1, frogColor
 	lb $a1, frogX
 	lb $a2, frogY 
@@ -138,6 +167,8 @@ drawFrog: #Arguments: frogX, frogY
 	mflo $t5
 	add $t3, $t3, $t5
 	addu $t6, $t3, $t0
+	addu $s4, $t3, $t0 #frog's top left pixel stored in $s4
+
 	sw $t1, ($t6)
 	addi $t3, $t3, 12
 	addu $t6, $t3, $t0
