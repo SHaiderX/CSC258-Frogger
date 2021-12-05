@@ -104,13 +104,11 @@ main:
 	li $s1, 3072 #Starting row
 	jal drawRow
 
-	li $a0, 2
-	la $a1, carRow1
-	jal ArrayForward
+	la $a0, carRow1
+	jal MoveRow
 
-	li $a0, 2
-	la $a1, carRow2
-	jal ArrayForward
+	la $a0, carRow2
+	jal MoveRow
 	
 	li $v0, 32
 	li $a0, 1000
@@ -191,22 +189,19 @@ drawRow: # a0: array, a1: y axis, a2: color
 	li $t6, 0
 	LoopDR:
 		beq $t6, 8, endDR
-		
 		li $t3, 0
 		add $t3, $t6, $a0 # t3 = A[i]
 		lw $t4, ($t3) # t4 = value of A[i]
-	
 		li $t8, 0
 		add $t8, $t8, $t4 # x coordinate
 		
 		#Drawing:
 		li $t7, 0
 		sll $t1, $t8, 4 #x coordinate
-		sll $t5, $a1, 2, #pixel row
+		sll $t5, $a1, 2, #y coord
 		sll $t5, $t5, 7
-		add $t7, $t1, $t5 # top left
-		#addi $t7, $t7, 20  # MOVING
-		#add $s0, $t7, $zero
+		add $t7, $t1, $t5 # top left of car
+		add $s7, $s1, $t0 # top left of row
 		add $t7, $t7, $t0
 		
 		sw $a2, 0($t7) #1
@@ -214,40 +209,20 @@ drawRow: # a0: array, a1: y axis, a2: color
 		sw $a2, 256($t7) #1
 		sw $a2, 384($t7) #1
 
-		sw $a2, 4($t7) #2
-		sw $a2, 132($t7) #2
-		sw $a2, 260($t7) #2
-		sw $a2, 388($t7) #2
-
-		sw $a2, 8($t7) #3
-		sw $a2, 136($t7) #3
-		sw $a2, 264($t7) #3
-		sw $a2, 392($t7) #3
-
-		sw $a2, 12($t7) #4
-		sw $a2, 140($t7) #4
-		sw $a2, 268($t7) #4
-		sw $a2, 396($t7) #4
-		
-		sw $a2, 16($t7) #5
-		sw $a2, 144($t7) #5
-		sw $a2, 272($t7) #5
-		sw $a2, 400($t7) #5
-
-		sw $a2, 20($t7) #6
-		sw $a2, 148($t7) #6
-		sw $a2, 276($t7) #6
-		sw $a2, 404($t7) #6
-
-		sw $a2, 24($t7) #7
-		sw $a2, 152($t7) #7
-		sw $a2, 280($t7) #7
-		sw $a2, 408($t7) #7
-
-		sw $a2, 28($t7)
-		sw $a2, 156($t7)
-		sw $a2, 284($t7)		
-		sw $a2, 412($t7)
+		li $s2, 0
+		Loop7Draw: beq $s2, 7, Loop7End
+			addi $t7, $t7, 4
+			sub $s3, $t7, $s7
+			ble $s3, 127, Skip1 # if current pixel goes out of current line
+				add $t7, $s7, $zero #make current pixel corner pixel
+			Skip1:
+			sw $a2, 0($t7) #1
+			sw $a2, 128($t7) #1
+			sw $a2, 256($t7) #1
+			sw $a2, 384($t7) #1
+			addi $s2, $s2, 1
+			j Loop7Draw
+		Loop7End:
 
 		add $t6, $t6, 4
 		j LoopDR
@@ -292,17 +267,19 @@ keyboard_input:
 	key_exit:
 		jr $ra
 
-ArrayForward: #a0: length of array , a1: array [1] address
-	lw $s0, 0($a1) 
-	addi $s0, $s0, 1
-	li $t2, 8
-	bge $s0, $t2, XValueExceeded 
-	blt $s0, $t2, XValueAdequate 
-XValueExceeded:
-	li $s0, 0
-XValueAdequate:
-	sw $s0, 0($a1) # save value
-	addi $a0, $a0, -1
-	addi $a1, $a1, 4
-	bnez $a0, ArrayForward
-	jr $ra
+MoveRow: #a0: length of array , a1: array [1] address
+	li $t3, 0
+	LoopMR:
+		lw $t0, 0($a0) 
+		addi $t0, $t0, 1 
+		li $t2, 8
+		bge $t0, $t2, overflow 
+		blt $t0, $t2, bounded 
+	overflow:
+		li $t0, 0
+	bounded:
+		sw $t0, 0($a0) # save value
+		addi $a0, $a0, 4
+		addi $t3, $t3, 1
+		beq $t3, 1, LoopMR
+		jr $ra
