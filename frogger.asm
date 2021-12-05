@@ -111,6 +111,8 @@ main:
 	li $s5, 0
 	la $a0, carRow1
 	jal MoveRow
+	la $a0, logRow2
+	jal MoveRow
 
 	SkipMoveArray:
 	bne $s6, 50, SkipMoveArray2 #if not 60, skip
@@ -120,8 +122,7 @@ main:
 
 	la $a0, logRow1
 	jal MoveRowB
-	la $a0, logRow2
-	jal MoveRow
+	
 
 	SkipMoveArray2:
 
