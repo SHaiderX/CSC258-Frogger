@@ -41,6 +41,7 @@
 	lives: .byte 3
 
 .text
+li $s5, 0
 li $s6, 0
 main:
 	lw $t0, displayAddress # $t0 stores the base address for display
@@ -79,8 +80,6 @@ main:
 	li $a2, 4096
 	lw $a3,  grass
 	jal drawLine
-
-	jal drawFrog
 	
 	la $a0, logRow1
 	li $a1, 2 # y cord
@@ -94,6 +93,8 @@ main:
 	li $s1, 1536 #Starting row
 	jal drawRow
 
+	jal drawFrog
+
 	la $a0, carRow1
 	li $a1, 5 # y cord
 	lw $a2, red
@@ -105,12 +106,15 @@ main:
 	lw $a2, red
 	li $s1, 3072 #Starting row
 	jal drawRow
-
-	bne $s6, 50, SkipMoveArray #if not 60, skip
 	
-	li $s6, 0
+	bne $s5, 30, SkipMoveArray #if not 60, skip
+	li $s5, 0
 	la $a0, carRow1
 	jal MoveRow
+
+	SkipMoveArray:
+	bne $s6, 50, SkipMoveArray2 #if not 60, skip
+	li $s6, 0
 	la $a0, carRow2
 	jal MoveRow
 
@@ -119,7 +123,7 @@ main:
 	la $a0, logRow2
 	jal MoveRow
 
-	SkipMoveArray:
+	SkipMoveArray2:
 
 	#collision detection - cars
 	lw $t1, 0($s4) #color of frog's top left into t1
@@ -142,6 +146,7 @@ main:
 	notHit:
 
 	addi $s6, $s6, 1 #increment movement counter
+	addi $s5, $s5, 1 #increment movement counter
 
 	li $v0, 32
 	li $a0, 16
