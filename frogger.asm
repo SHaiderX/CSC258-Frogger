@@ -32,6 +32,7 @@
 	ocean: .word 0x6060FF
 	safeZone: .word 0xFFD966
 	road: .word 0x404040
+	WinColor: .word 0x731F67
 	black: .word 0x000000
 	red: .word 0xFF1010
 	log: .word 0x732F00
@@ -58,7 +59,7 @@ main:
 	#EndZone
 	li $a1, 512 #Start Value
 	li $a2, 1024 #End Value
-	lw $a3,  grass #Color
+	lw $a3, WinColor #Color
 	jal drawLine
 	#Ocean
 	li $a1, 1024
@@ -145,6 +146,12 @@ main:
 
 	beq $t3, 0, Exit
 	notHit:
+
+
+	#Win Detection
+	lw $t1, 4($s4) #color of frog's top left into t1
+	lw $t2, WinColor
+	beq $t1, $t2, Exit
 
 	addi $s6, $s6, 1 #increment movement counter
 	addi $s5, $s5, 1 #increment movement counter
