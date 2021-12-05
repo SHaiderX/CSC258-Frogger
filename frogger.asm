@@ -106,10 +106,14 @@ main:
 
 	la $a0, carRow1
 	jal MoveRow
-
 	la $a0, carRow2
 	jal MoveRow
-	
+
+	la $a0, logRow1
+	jal MoveRowB
+	la $a0, logRow2
+	jal MoveRow
+
 	li $v0, 32
 	li $a0, 1000
 	syscall
@@ -270,16 +274,33 @@ keyboard_input:
 MoveRow: #a0: length of array , a1: array [1] address
 	li $t3, 0
 	LoopMR:
-		lw $t0, 0($a0) 
-		addi $t0, $t0, 1 
+		lw $s0, 0($a0) 
+		addi $s0, $s0, 1
 		li $t2, 8
-		bge $t0, $t2, overflow 
-		blt $t0, $t2, bounded 
+		bge $s0, $t2, overflow 
+		blt $s0, $t2, bounded 
 	overflow:
-		li $t0, 0
+		li $s0, 0
 	bounded:
-		sw $t0, 0($a0) # save value
+		sw $s0, 0($a0) # save value
 		addi $a0, $a0, 4
 		addi $t3, $t3, 1
 		beq $t3, 1, LoopMR
+		jr $ra
+
+MoveRowB: #a0: length of array , a1: array [1] address
+	li $t3, 0
+	LoopMRB:
+		lw $s0, 0($a0) 
+		addi $s0, $s0, -1 
+		li $t2, 0
+		bge $s0, $t2, boundedB
+		blt $s0, $t2, overflowB 
+	overflowB:
+		li $s0, 7
+	boundedB:
+		sw $s0, 0($a0) # save value
+		addi $a0, $a0, 4
+		addi $t3, $t3, 1
+		beq $t3, 1, LoopMRB
 		jr $ra
