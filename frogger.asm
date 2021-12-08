@@ -9,16 +9,22 @@
 # - Unit width in pixels: 8
 # - Unit height in pixels: 8
 # - Display width in pixels: 256
-# - Display height in pixels: 256
+# - Display height in pixels: 512
 # - Base Address for Display: 0x10008000 ($gp)
 #
 # Which milestone is reached in this submission?
-# - Milestone 1/2
+# - Milestone 5
 #
 # Which approved additional features have been implemented?
+# 1. Displaying Number of Lives (In Message Box) - Easy
+# 2. Have Objects in different rows move at different speeds - Easy
+# 3. Third row in water and road - Easy
+# 4. Sound Effects - Hard
+# 5. Display Player Score (In Message Box) - Hard
 #
 # Any additional information that the TA needs to know:
-# - (write here, if any)
+# On the project handout it asks to display score and player lives on the screen, but according
+# to piazza post @725 and @667, an instructor has allowed for both of these to be displayed in the message box, which I have done.
 #
 #####################################################################
 
@@ -31,7 +37,7 @@
 	logRow1: .word 0,4
 	logRow2: .word 1,5
 	logRow3: .word 0,5
-	score: .byte 0
+	score: .word 0
 	frogX: .byte 16
 	frogY: .byte 0
 	lives: .byte 3
@@ -52,8 +58,14 @@
 .text
 li $s5, 0
 li $s6, 0
-main:
 	lw $t0, displayAddress # $t0 stores the base address for display
+
+	li $a1, 0 #Start Value
+	li $a2, 512 #End Value
+	lw $a3,  WinColor #Color
+	jal drawLine
+
+main:
 	
 	#check for keypress
 	lw $t8, 0xffff0000
@@ -61,10 +73,6 @@ main:
 	
 
 #EndZone
-	li $a1, 0 #Start Value
-	li $a2, 512 #End Value
-	lw $a3,  WinColor #Color
-	jal drawLine
 	#Ocean
 	li $a1, 512
 	li $a2, 2048
@@ -99,7 +107,7 @@ main:
 	la $a0, logRow3
 	li $a1, 3 # y cord
 	lw $a2, log
-	li $s1, 2560 #Starting row
+	li $s1, 1536 #Starting row
 	jal drawRow
 	jal drawFrog
 	la $a0, carRow1
@@ -139,13 +147,10 @@ main:
 	li $s6, 0
 	la $a0, carRow2
 	jal MoveRow
-
 	la $a0, logRow1
 	jal MoveRowB
-
 	la $a0, logRow3
 	jal MoveRowB
-
 	la $a0, carRow3
 	jal MoveRowB
 
@@ -200,7 +205,13 @@ FrogHit:
 	addi $t4, $zero, 16
 	sb $t4, frogX
 
+	lb $t5, frogY
+	addi $t5, $zero, 0
+	sb $t5, frogY
 	
+	 la $a0, newLine
+    li $v0, 4 
+	syscall
 	la $a0, str2
     li $v0, 4 
     syscall
@@ -210,10 +221,10 @@ FrogHit:
 	la $a0, newLine
     li $v0, 4 
 	syscall
+	la $a0, newLine
+    li $v0, 4 
+	syscall
 
-	lb $t5, frogY
-	addi $t5, $zero, 0
-	sb $t5, frogY
 	beq $t3, 0, LoseGame
 
 notHit:
@@ -221,8 +232,8 @@ notHit:
 	#Win Detection
 	lw $t1, 4($s4) #color of frog's top left into t1
 	lw $t2, WinColor
-	beq $t1, $t2, WinJ
-
+	beq $t1, $t2, WinCondition
+WinReturn:
 	addi $s6, $s6, 1 #increment movement counter
 	addi $s5, $s5, 1 #increment movement counter
 
@@ -230,7 +241,7 @@ notHit:
 	li $a0, 16
 	syscall
 	j main
-WinJ:
+WinCondition:
 #WinSound
 		li $v0, 31
 		li $a1, 1300 # duration
@@ -240,19 +251,28 @@ WinJ:
 		syscall
 
 		la $t5, score
-		lb $t4, ($t5) #get score
-  		subi $t6, $t4, 500 #add 500 for winning
-  		sb $t6, 0($t5) #save new value
+		lw $t4, ($t5) #get score
+  		sub $t6, $t4, 500 #add 500 for winning
+  		sw $t6, 0($t5) #save new value
 		la $a0, scoreStr
 		li $v0, 4 
 		syscall
-		lb $a0, score #integer to be printed
+		lw $a0, score #integer to be printed
 		li $v0, 1 #system call code 1: print_int
 		syscall
 		la $a0, newLine
 		li $v0, 4 
 		syscall
-		j Exit
+
+		#Reset frog position
+		lb $t4, frogX
+		addi $t4, $zero, 16
+		sb $t4, frogX
+		lb $t5, frogY
+		addi $t5, $zero, 0
+		sb $t5, frogY
+		
+		j WinReturn
 LoseGame:
 		#LoseSound
 		li $v0, 31
@@ -415,13 +435,13 @@ keyboard_input:
 		li $a3, 30 #volume
 		syscall
 
-		lb $t4, ($t5) #get score
-  		addiu $t6, $t4, 100 #add 4 to y value
-  		sb $t6, 0($t5) #save new value
+		lw $t4, ($t5) #get score
+  		add $t6, $t4, 100 #add 4 to y value
+  		sw $t6, 0($t5) #save new value
 		la $a0, scoreStr
 		li $v0, 4 
 		syscall
-		lb $a0, score #integer to be printed
+		lw $a0, score #integer to be printed
 		li $v0, 1 #system call code 1: print_int
 		syscall
 		la $a0, newLine
@@ -455,13 +475,13 @@ keyboard_input:
 		li $a3, 30 #volume
 		syscall
 
-		lb $t4, ($t5) #get score
-  		subi $t6, $t4, 100 #add 4 to y value
-  		sb $t6, 0($t5) #save new value
+		lw $t4, ($t5) #get score
+  		sub $t6, $t4, 100 #add 4 to y value
+  		sw $t6, 0($t5) #save new value
 		la $a0, scoreStr
 		li $v0, 4 
 		syscall
-		lb $a0, score #integer to be printed
+		lw $a0, score #integer to be printed
 		li $v0, 1 #system call code 1: print_int
 		syscall
 		la $a0, newLine
